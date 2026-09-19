@@ -1,0 +1,3 @@
+id,label,station,parameter
+1,Température du sol - site A,site A,soil_temp
+2,Humidité  du sol - site A,site A,soil_moisture

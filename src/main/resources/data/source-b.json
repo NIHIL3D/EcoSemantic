@@ -1,0 +1,20 @@
+[
+  {
+    "identifier": "1",
+    "title": "Suivi thermique - site B",
+    "siteName": "site B",
+    "observedVariable": "soil_temperature"
+  },
+  {
+    "identifier": "2",
+    "title": "Suivi de l’humidité - site B",
+    "siteName": "site B",
+    "observedVariable": "soil_moisture"
+  },
+  {
+    "identifier": "3",
+    "title": "",
+    "siteName": "site B",
+    "observedVariable": "soil_temperature"
+  }
+]
