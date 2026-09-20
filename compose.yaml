@@ -1,0 +1,19 @@
+services:
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:8082:8081"
+    environment:
+      BLAZEGRAPH_ENDPOINT: http://blazegraph:9999/blazegraph/namespace/kb/sparql
+    depends_on:
+      - blazegraph
+
+  blazegraph:
+    build: ./docker/blazegraph
+    ports:
+      - "127.0.0.1:9998:9999"
+    volumes:
+      - blazegraph-data:/data
+
+volumes:
+  blazegraph-data:
