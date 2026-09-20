@@ -1,5 +1,6 @@
 package com.inrae.ecosemantic.rdf;
 
+import com.inrae.ecosemantic.model.DatasetMetadata;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.ResultSetFactory;
 import org.apache.jena.riot.Lang;
@@ -51,8 +52,8 @@ public class BlazegraphClient {
         }
     }
 
-    public List<String> queryByVariable(String variable) throws IOException, InterruptedException {
-        String sparql = buildVariableQuery(variable);
+    public List<DatasetMetadata> queryDatasets(String variable) throws IOException, InterruptedException {
+        String sparql = buildDatasetQuery(variable);
         String encodedQuery = URLEncoder.encode(sparql, StandardCharsets.UTF_8);
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -67,7 +68,7 @@ public class BlazegraphClient {
             throw new IOException("Blazegraph HTTP Error " + response.statusCode() + " : " + response.body());
         }
 
-        List<String> ids = new ArrayList<>();
+        List<DatasetMetadata> datasets = new ArrayList<>();
 
         try (var input = new ByteArrayInputStream(
                 response.body().getBytes(StandardCharsets.UTF_8))) {
@@ -76,31 +77,70 @@ public class BlazegraphClient {
 
             while (results.hasNext()) {
                 var row = results.nextSolution();
-                ids.add(row.getLiteral("id").getString());
+
+                datasets.add(new DatasetMetadata(
+                        row.getLiteral("id").getString(),
+                        row.getLiteral("sourceId").getString(),
+                        row.getLiteral("source").getString(),
+                        row.getLiteral("title").getString(),
+                        row.getLiteral("site").getString(),
+                        row.getResource("variable").getLocalName()
+                ));
             }
         }
 
-        return ids;
+        return datasets;
     }
 
-    private String buildVariableQuery(String variable){
+    public List<DatasetMetadata> queryDatasets() throws IOException, InterruptedException {
+        return queryDatasets(null);
+    }
+
+    private String buildDatasetQuery(String variable){
+        if(variable == null){
+            var query = new ParameterizedSparqlString("""
+            PREFIX ex: <https://example.org/ecocatalogue/>
+            PREFIX dct: <http://purl.org/dc/terms/>
+        
+            SELECT ?id ?sourceId ?title ?site ?source ?variable
+            WHERE {
+              GRAPH <https://example.org/ecocatalogue/graph/catalogue> {
+                ?dataset dct:identifier ?id ;
+                         ex:sourceId ?sourceId ;
+                         dct:title ?title ;
+                         ex:site ?site ;
+                         ex:source ?source ;
+                         ex:variable ?variable .
+                      }
+            }
+            """);
+            return query.toString();
+        }
+
         if(!"soil_temperature".equals(variable) && !"soil_moisture".equals(variable)){
             throw new IllegalArgumentException("Unknown variable: " + variable);
         }
 
-        var query = new ParameterizedSparqlString("""
-                PREFIX ex: <https://example.org/ecocatalogue/>
-                PREFIX dct: <http://purl.org/dc/terms/>
-                SELECT ?id
-                WHERE{
-                    GRAPH <https://example.org/ecocatalogue/graph/catalogue> {
-                        ?dataset ex:variable ?requestedVariable;
-                            dct:identifier ?id .
-                    }
-                }
-                """);
-        query.setIri("requestedVariable", "https://example.org/ecocatalogue/variable/" + variable);
-        return query.toString();
+        var queryByVariable = new ParameterizedSparqlString("""
+            PREFIX ex: <https://example.org/ecocatalogue/>
+            PREFIX dct: <http://purl.org/dc/terms/>
+        
+            SELECT ?id ?sourceId ?title ?site ?source ?variable
+            WHERE {
+              GRAPH <https://example.org/ecocatalogue/graph/catalogue> {
+                ?dataset dct:identifier ?id ;
+                         ex:sourceId ?sourceId ;
+                         dct:title ?title ;
+                         ex:site ?site ;
+                         ex:source ?source ;
+                         ex:variable ?variable .
+        
+                VALUES ?variable { ?requestedVariable }
+              }
+            }
+            """);
+        queryByVariable.setIri("requestedVariable", "https://example.org/ecocatalogue/variable/" + variable);
+        return queryByVariable.toString();
     }
 
 

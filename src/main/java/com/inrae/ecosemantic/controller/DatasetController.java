@@ -3,10 +3,11 @@ package com.inrae.ecosemantic.controller;
 import java.io.IOException;
 import java.util.List;
 
+import com.inrae.ecosemantic.model.DatasetMetadata;
 import com.inrae.ecosemantic.service.DatasetService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.server.ResponseStatusException;
 
 
 @RestController
@@ -19,9 +20,15 @@ public class DatasetController {
     }
 
     @GetMapping("/datasets")
-    public List<String> listDatasets(@RequestParam(required = false) String variable) throws IOException, InterruptedException {
-//        return datasetService.findAll();
-        return datasetService.getIds(variable);
+    public List<DatasetMetadata> listDatasets(@RequestParam(required = false) String variable) throws IOException, InterruptedException {
+        try {
+            if (variable == null) {
+                return datasetService.findAll();
+            }
+            return datasetService.findByVariable(variable);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        }
     }
 
     @PostMapping("/datasets/rdf")

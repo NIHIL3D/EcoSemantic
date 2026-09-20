@@ -33,8 +33,8 @@ public class DatasetService {
         return new InputStreamReader(new ClassPathResource(filename).getInputStream(), StandardCharsets.UTF_8);
     }
 
-    public List<DatasetMetadata> findAll(){
-        return List.copyOf(datasets);
+    public List<DatasetMetadata> findAll() throws IOException, InterruptedException {
+        return blazegraphClient.queryDatasets();
     }
 
     public void uploadToBlazegraph() throws IOException, InterruptedException {
@@ -46,8 +46,8 @@ public class DatasetService {
         }
     }
 
-    public List<String> getIds(String variable) throws IOException, InterruptedException {
-        return blazegraphClient.queryByVariable(variable);
+    public List<DatasetMetadata> findByVariable(String variable) throws IOException, InterruptedException {
+        return blazegraphClient.queryDatasets(variable);
 
     }
 }

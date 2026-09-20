@@ -31,6 +31,7 @@ public class DatasetRdfMapper {
             resource.addProperty(model.createProperty(EX + "site"), model.createLiteral(dataset.site(), "fr"));
             resource.addProperty(model.createProperty(EX + "variable"), model.createResource(EX + "variable/" + dataset.variable()));
             resource.addProperty(model.createProperty(EX + "source"), dataset.source());
+            resource.addProperty(model.createProperty(EX + "sourceId"), dataset.sourceId());
         }
 
         return model;
